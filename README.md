@@ -1,6 +1,47 @@
-**Setting up a new Raspberry Pi from scratch for the Digial Secretary**
+# Setting up a new Raspberry Pi from scratch
 
-# 1. hardware setup (SD cards etc)
+# Table of Contents
+
+1. [Hardware setup](#hardware-setup)
+    1. [Download Raspbian](#download-raspbian)
+    1. [burn micro-SD card ](#burn-micro-sd-card )
+        1. [Option 1: etcher](#option-1-etcher)
+        1. [Option 2: dd](#option-2-dd)
+    1. [MPEG license keys (Optional)](#mpeg-license-keys-optional)
+    1. [Key generation for `ssh`](#key-generation-for-ssh)
+    1. [Power up with keyboard, mouse, monitor](#power-up-with-keyboard-mouse-monitor)
+2. [Configure linux (AS ROOT)](#2-configure-linux-as-root)
+    1. [`raspi-config`](#raspi-config)
+    1. [Change passwords](#change-passwords)
+    1. [Require pw when sudo](#require-pw-when-sudo)
+    1. [Capslock to ctrl](#capslock-to-ctrl)
+    1. [key-repeat](#key-repeat)
+    1. [bashrc](#bashrc)
+    1. [sshd](#sshd)
+    1. [root crontab](#root-crontab)
+3. [Update software (AS ROOT)](#3-update-software-as-root)
+    1. [plug in internet](#plug-in-internet)
+    1. [update](#update)
+    1. [firewall](#firewall)
+    1. [install packages](#install-packages)
+        1. [exim4 & mutt](#exim4-mutt)
+4. [Configure a user](#4-configure-a-user)
+    1. [user's bashrc](#users-bashrc)
+    1. [python](#python)
+    1. [git](#git)
+        1. [set username & email](#set-username-email)
+        1. [bash prompt shows git branch etc](#bash-prompt-shows-git-branch-etc)
+        1. [aliases](#aliases)
+        1. [colors](#colors)
+5. [For headless web-browser driving (Selenium)](#5-for-headless-web-browser-driving-selenium)
+    1. [install](#install)
+        1. [geckodriver](#geckodriver)
+    1. [Test headless (xvfb) selenium installation](#test-headless-xvfb-selenium-installation)
+
+
+
+
+# 1. Hardware setup
 ## Download Raspbian
 
 <https://www.raspberrypi.org/downloads/raspbian/>
@@ -16,9 +57,9 @@
 
 ###  Option 2: dd
 
-#. Unzip `.zip` to extract the `.img` file
-#. Insert micro-SD card
-#. Find the location of the SD card in `/dev/`:
+1. Unzip `.zip` to extract the `.img` file
+2. Insert micro-SD card
+3. Find the location of the SD card in `/dev/`:
 
         (python3.4.1)Computron:~ justin$ diskutil list
         /dev/disk0
@@ -34,13 +75,13 @@
 
     In this example the 16 GB SD card is `/dev/disk1`. The other one, `/dev/disk0`, is my laptop HDD. 
 
-#. Unmount the SD card by using the disk identifier to prepare copying data to it:
+4. Unmount the SD card by using the disk identifier to prepare copying data to it:
 
         diskutil unmountDisk /dev/disk1
 
     (or can use Mac's Disk Utility.)
 
-#. Use the "raw" location `/dev/rdisk1` (note the extra `r` in `rdisk1`) in the `dd` command:
+5. Use the "raw" location `/dev/rdisk1` (note the extra `r` in `rdisk1`) in the `dd` command:
 
         (python3.4.1)Computron:~ justin$ date; sudo dd bs=1m \
         if=/Users/justin/Projects/Raspberry-pi-Raspbian-images/2018-04-18-raspbian-stretch.zip \
@@ -61,7 +102,7 @@ Notes:
 - If `dd: invalid number '1m'` error, use `1M` instead of `1m`.
 - If `dd: /dev/rdisk1: Input/output error`, but `dd` continues to run, it might be ok.
 
-## mpeg license keys
+## MPEG license keys (Optional)
 
 **Optional: Hardware-decoding of MPG video**
 
@@ -77,7 +118,7 @@ However, there is a solution:
 
 The Raspberry Pi has an MPEG-decoder chip that allows you to hardware-accelerate the decoding of MPEG video. However, due to MPEG licensing reasons, this chip is disabled by default; you can pay $5 for an MPG license key to enable it. If you observe stuttering or skipping of MPG video, consider enabling the chip with the following procedure:
 
-#. Find the RPI's serial number.
+1. Find the RPI's serial number.
 
     - Option 1: from terminal
 
@@ -102,12 +143,12 @@ The Raspberry Pi has an MPEG-decoder chip that allows you to hardware-accelerate
         OpenElec > Settings > Hardware > get serial number of RPi
 
 
-#. Go to <http://www.raspberrypi.com/mpeg-2-license-key/>  and give it the serial # and pay $5. They'll email you a license key. 
+2. Go to <http://www.raspberrypi.com/mpeg-2-license-key/>  and give it the serial # and pay $5. They'll email you a license key. 
 
     - The license is 8 hex characters of the form `0x31415927`. 
     - It is specific to your Pi's serial number, so you can't transfer it between RPis.
 
-#. Plug the Pi's SD card into a normal computer, open the file `config.txt`, change the line
+3. Plug the Pi's SD card into a normal computer, open the file `config.txt`, change the line
 
         # decode_MPG2=0x00000000
 
@@ -115,7 +156,7 @@ The Raspberry Pi has an MPEG-decoder chip that allows you to hardware-accelerate
 
         decode_MPG2=0x31415927
 
-#. Plug the SD card back into the Pi and now MPG video should play smoothly.
+4. Plug the SD card back into the Pi and now MPG video should play smoothly.
 
 
 Without MPG license, one of the 4 CPU cores runs close to 100%:
@@ -132,7 +173,7 @@ With the MPG license, the CPU load on all cores is less than 5%:
 
 
 
-## public key for ssh access  
+## Key generation for `ssh`
 
 From the computer that you'll `ssh` into your RPi from, generate a ssh keypair:
 
@@ -149,7 +190,7 @@ Copy it onto the SD card:
 
     laptop$ cp -a ~/.ssh/rpi-2018.pub /Volumes/boot/
 
-## power up with keyboard, mouse, monitor
+## Power up with keyboard, mouse, monitor
 
 Should see rainbow screen:
 
@@ -159,8 +200,9 @@ Should see rainbow screen:
 
 **Important**: do not give network access yet.
 
-## raspi-config
-Start `raspi-config`
+## `raspi-config`
+
+Start the `raspi-config` configuration tool:
 
     $ sudo raspi-config
 
@@ -229,13 +271,13 @@ Use arrow keys & ENTER to move around.
         BACKSPACE="guess"    
 
 
-## change pws
+## Change passwords
 
     $ passwd root
     $ passwd pi
 
 
-## require pw when sudo, remember pw for a few mins
+## Require pw when sudo
 
     $ sudo visudo
 
@@ -271,9 +313,9 @@ Use arrow keys & ENTER to move around.
 
 **Verify**: Log out & back in, try to `sudo ls`, it should ask for a pw. Give it your login pw for `pi` user, it should work (perform `ls`). Do `sudo ls` again, it shouldn't ask for pw. In 3 mins, the 'no pw' grace period expires and `sudo ls` should ask for pw again.
 
-## remap capslock to ctrl
+## Capslock to ctrl
 
-Note: It is surprisingly hard to remap capslock to ctrl at the terminal (ie, outside of the X graphical environment and outside ssh). If you only need the remap to work in X, it's easy. And if you're driving your RPi from ssh, your client machine does the remapping. But if you are using your RPi outside of X and outside of ssh, I don't know a reliable method for remapping capslock to control.
+Note: It is surprisingly hard to remap the capslock key to act as the control key at the terminal (ie, outside of the X graphical environment and outside ssh). If you only need the remap to work in X, it's easy. And if you're driving your RPi from ssh, your client machine does the remapping. But if you are using your RPi outside of X and outside of ssh, I don't know a reliable method for remapping capslock to control.
 
 In `/etc/default/keyboard`, change `XKBOPTIONS`:
 
@@ -287,7 +329,7 @@ Reload keyboard config:
 
 Verify: ??? both in X sess & non-X sess?
 
-## fast key-repeat
+## key-repeat
 
 - Put in the global xinitrc so it works in any X session
 
@@ -318,7 +360,7 @@ Add to `/etc/bash.bashrc` (the global bashrc file):
     - `emacs` opens in a terminal, not a X window
 - test again for non-root user.
 
-## enable sshd carefully
+## sshd
 
 Earlier in this tutorial, you created a keypair and copied it to the RPi's SD card.
 
@@ -405,13 +447,13 @@ Run `crontab -e` (as root) and add:
     ufw reload
     ufw status
 
-## install basic packages that aren't built-in
+## install packages
 
     apt-get install -y mlocate emacs ffmpeg logwatch exim4-daemon-light mutt
     updatedb  # so 'locate' works
     apt-get autoremove -y
 
-### exim4 & mutt (cron / mail delivery)
+### exim4 & mutt
 
 It's usefult to have the local mail system set up:
 
@@ -434,7 +476,7 @@ In `mutt`, you should see that message appear.
 
 # 4. Configure a user
 
-### set bashrc
+### user's bashrc
 
 Add to `/home/pi/.bashrc`:
 
@@ -443,7 +485,7 @@ Add to `/home/pi/.bashrc`:
     export HISTTIMEFORMAT="%F %T  " 
     export EDITOR="emacs -nw" 
 
-### Python 
+### python 
 
     pip install --upgrade pip
     pip install virtualenv
@@ -496,7 +538,7 @@ Append virtualenv cmds to `/home/pi/.bashrc`:
 
 # 5. For headless web-browser driving (Selenium)
 
-## install software
+## install
 
     apt-get install -y xvfb firefox-esr 
 
@@ -542,7 +584,7 @@ I got a working configuration:
         geckodriver --version
 
 
-## Testing headless (xvfb) selenium installation
+## Test headless (xvfb) selenium installation
 
 If get error 
 
