@@ -2,7 +2,7 @@
 
 # Table of Contents
 
-1. [Hardware setup](#hardware-setup)
+1. [Hardware setup](#1-hardware-setup)
     1. [Download Raspbian](#download-raspbian)
     1. [burn micro-SD card ](#burn-micro-sd-card )
         1. [Option 1: etcher](#option-1-etcher)
@@ -45,6 +45,8 @@
 ## Download Raspbian
 
 <https://www.raspberrypi.org/downloads/raspbian/>
+
+Latest download: <https://downloads.raspberrypi.org/raspbian_latest>
 
 ## burn micro-SD card 
 ###  Option 1: etcher
@@ -177,7 +179,7 @@ With the MPG license, the CPU load on all cores is less than 5%:
 
 From the computer that you'll `ssh` into your RPi from, generate a ssh keypair:
 
-    $ ssh-keygen -t rsa
+    ssh-keygen -t rsa
 
     Generating public/private rsa key pair.
     Enter file in which to save the key (/Users/justin/.ssh/id_rsa): /Users/justin/.ssh/rpi-2018
@@ -188,7 +190,7 @@ From the computer that you'll `ssh` into your RPi from, generate a ssh keypair:
 
 Copy it onto the SD card:
 
-    laptop$ cp -a ~/.ssh/rpi-2018.pub /Volumes/boot/
+    cp -a ~/.ssh/rpi-2018.pub /Volumes/boot/
 
 ## Power up with keyboard, mouse, monitor
 
@@ -210,7 +212,7 @@ Use arrow keys & ENTER to move around.
 
 ![](Images/raspi-config.png)
 
-1. Do NOT do **Change User Password** yet, we will come back to it after setting locale & keyboard.
+1. Do NOT **Change User Password** yet, the keyboard layout isn't set up. We will come back to it after setting locale & keyboard.
 2. Network Options
     1. Hostname: `raspberrypi3`
 3. Boot Options
@@ -236,6 +238,8 @@ Use arrow keys & ENTER to move around.
 
 *(reboots)*
 
+*(Default Raspbian user / password is 'pi / raspberry')*
+
 - Verify: desktop comes up & asks for a password before logging in
 - Verify `$ hostname` returns `raspberrypi3` 
 - Verify locale:
@@ -248,8 +252,6 @@ Use arrow keys & ENTER to move around.
         en_US.iso885915
         en_US.utf8
         POSIX
-
-        $ sudo raspi-config
 
 - Verify correct time and timezone:
 
@@ -270,11 +272,27 @@ Use arrow keys & ENTER to move around.
 
         BACKSPACE="guess"    
 
+## Record RPi serial number
+
+    $ cat /proc/cpuinfo
+    processor       : 0
+    model name      : ARMv6-compatible processor rev 7 (v6l)
+    BogoMIPS        : 2.00
+    Features        : half thumb fastmult vfp edsp java tls
+    CPU implementer : 0x41
+    CPU architecture: 7
+    CPU variant     : 0x0
+    CPU part        : 0xb76
+    CPU revision    : 7
+
+    Hardware        : BCM2708
+    Revision        : 000e
+    Serial          : 0000000012345678   <--- this is the serial number
 
 ## Change passwords
 
-    $ passwd root
-    $ passwd pi
+    $ sudo passwd root
+    $ sudo passwd pi
 
 
 ## Require pw when sudo
@@ -313,9 +331,13 @@ Use arrow keys & ENTER to move around.
 
 **Verify**: Log out & back in, try to `sudo ls`, it should ask for a pw. Give it your login pw for `pi` user, it should work (perform `ls`). Do `sudo ls` again, it shouldn't ask for pw. In 3 mins, the 'no pw' grace period expires and `sudo ls` should ask for pw again.
 
-## Capslock to ctrl
+## Keyboard configuration
 
-Note: It is surprisingly hard to remap the capslock key to act as the control key at the terminal (ie, outside of the X graphical environment and outside ssh). If you only need the remap to work in X, it's easy. And if you're driving your RPi from ssh, your client machine does the remapping. But if you are using your RPi outside of X and outside of ssh, I don't know a reliable method for remapping capslock to control.
+Next we make `capslock` act as a `control` key, and set the key repeat nice and fast.
+
+It's important to note that many keyboard config settings that people suggest only work in a graphical X session, and do not work at a raw terminal session like the terminal you get with `ctrl-alt-F1` (do `ctrl-alt-F7` to get back to your window session).
+
+### Capslock to ctrl
 
 In `/etc/default/keyboard`, change `XKBOPTIONS`:
 
@@ -323,25 +345,41 @@ In `/etc/default/keyboard`, change `XKBOPTIONS`:
 
     XKBOPTIONS="terminate:ctrl_alt_bksp,ctrl:nocaps"
 
-Reload keyboard config:
+Reboot.
+
+*Note: This command should apply this new keyboard setting, but it didn't work for me:*
 
     invoke-rc.d keyboard-setup start
 
-Verify: ??? both in X sess & non-X sess?
+Verify: in the window manager, in a terminal window, `capslock-p` moves to the previous command.
 
-## key-repeat
+### key-repeat
 
-- Put in the global xinitrc so it works in any X session
+Put in the global xinitrc so it works in any X session:
 
-        echo "xset r rate 130 80" >> /etc/X11/xinit/xinitrc
+    sudo nano /etc/X11/xinit/xinitrc
 
-- Apply settings
+At the bottom, put
+    
+    xset r rate 130 80
 
-        invoke-rc.d keyboard-setup start
+This means: After holding down a key for 130 ms, the key will be repeated at a rate of 80 chars per sec.
 
-- If not using X, not sure how to do it.
+Reboot.
 
-Verify: ??? both in X sess & non-X sess?
+*Note: This command should apply this new keyboard setting, but it didn't work for me:*
+
+    invoke-rc.d keyboard-setup start
+
+- If not using X, not sure how to set key repeat.
+
+If you ctrl-alt-F1 to get to a non-X terminal, the `kbdrate` command is how you change the key repeat:
+
+    GLOBAL_BASHRC="/etc/bash.bashrc"
+    echo "kbdrate -r $KEYBD_REPEAT_CHARS_PER_SEC -d $KEYBD_DELAY_UNTIL_REPEAT_MS " >> $GLOBAL_BASHRC
+
+
+Verify: at a terminal window, see if key repeat is nice and fast.
 
 ## bashrc
 
