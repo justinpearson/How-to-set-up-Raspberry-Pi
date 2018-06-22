@@ -17,9 +17,17 @@
 - firefox-esr version:
 - geckodriver version: 
 - RAM: 
-- # cpu cores: 
+- num cpu cores: 
 - initial version of raspbian: 
 
+# test checkboxes
+
+[ ] 1. foo
+[ ] 2. bar
+    [ ] 1. baz
+    [ ] 2. marf
+[ ] 3. gorg
+[ ] 4. flag    
 
 # Table of Contents
 
