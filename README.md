@@ -1,42 +1,64 @@
 # Setting up a new Raspberry Pi from scratch
 
+**Raspberry Pi Travel log:**
+
+- label on rpi case: 
+- location: 
+- purpose: 
+- rpi serial #:
+- mpeg license: 
+- hostname: 
+- static IP addr: 
+- MAC addr:
+- rpi ssh alias: 
+- ssh key name in `~/.ssh/blah.pub`:
+- selenium version:
+- matplotlib version:
+- firefox-esr version:
+- geckodriver version: 
+- RAM: 
+- # cpu cores: 
+- initial version of raspbian: 
+
+
 # Table of Contents
 
-1. [Hardware setup](#1-hardware-setup)
-    1. [Download Raspbian](#download-raspbian)
-    1. [burn micro-SD card ](#burn-micro-sd-card )
-        1. [Option 1: etcher](#option-1-etcher)
-        1. [Option 2: dd](#option-2-dd)
-    1. [MPEG license keys (Optional)](#mpeg-license-keys-optional)
-    1. [Key generation for `ssh`](#key-generation-for-ssh)
-    1. [Power up with keyboard, mouse, monitor](#power-up-with-keyboard-mouse-monitor)
-2. [Configure linux (AS ROOT)](#2-configure-linux-as-root)
-    1. [`raspi-config`](#raspi-config)
-    1. [Change passwords](#change-passwords)
-    1. [Require pw when sudo](#require-pw-when-sudo)
-    1. [Capslock to ctrl](#capslock-to-ctrl)
-    1. [key-repeat](#key-repeat)
-    1. [bashrc](#bashrc)
-    1. [sshd](#sshd)
-    1. [root crontab](#root-crontab)
-3. [Update software (AS ROOT)](#3-update-software-as-root)
-    1. [plug in internet](#plug-in-internet)
-    1. [update](#update)
-    1. [firewall](#firewall)
-    1. [install packages](#install-packages)
-        1. [exim4 & mutt](#exim4-mutt)
-4. [Configure a user](#4-configure-a-user)
-    1. [user's bashrc](#users-bashrc)
-    1. [python](#python)
-    1. [git](#git)
-        1. [set username & email](#set-username-email)
-        1. [bash prompt shows git branch etc](#bash-prompt-shows-git-branch-etc)
-        1. [aliases](#aliases)
-        1. [colors](#colors)
-5. [For headless web-browser driving (Selenium)](#5-for-headless-web-browser-driving-selenium)
-    1. [install](#install)
-        1. [geckodriver](#geckodriver)
-    1. [Test headless (xvfb) selenium installation](#test-headless-xvfb-selenium-installation)
+1. [ ] [Hardware setup](#1-hardware-setup)
+    1. [ ] [Download Raspbian](#download-raspbian)
+    1. [ ] [burn micro-SD card ](#burn-micro-sd-card )
+        1. [ ] [Option 1: etcher](#option-1-etcher)
+        1. [ ] [Option 2: dd](#option-2-dd)
+    1. [ ] [MPEG license keys (Optional)](#mpeg-license-keys-optional)
+    1. [ ] [Key generation for `ssh`](#key-generation-for-ssh)
+    1. [ ] [Power up with keyboard, mouse, monitor](#power-up-with-keyboard-mouse-monitor)
+2. [ ] [Configure linux (AS ROOT)](#2-configure-linux-as-root)
+    1. [ ] [`raspi-config`](#raspi-config)
+    1. [ ] [Change passwords](#change-passwords)
+    1. [ ] [Require pw when sudo](#require-pw-when-sudo)
+    1. [ ] [Capslock to ctrl](#capslock-to-ctrl)
+    1. [ ] [key-repeat](#key-repeat)
+    1. [ ] [bashrc](#bashrc)
+    1. [ ] [sshd](#sshd)
+    1. [ ] [static IP address](#static-ip-address)
+    1. [ ] [root crontab](#root-crontab)
+3. [ ] [Update software (AS ROOT)](#3-update-software-as-root)
+    1. [ ] [plug in internet](#plug-in-internet)
+    1. [ ] [update](#update)
+    1. [ ] [firewall](#firewall)
+    1. [ ] [install packages](#install-packages)
+        1. [ ] [exim4 & mutt](#exim4-mutt)
+4. [ ] [Configure a user](#4-configure-a-user)
+    1. [ ] [user's bashrc](#users-bashrc)
+    1. [ ] [python](#python)
+    1. [ ] [git](#git)
+        1. [ ] [set username & email](#set-username-email)
+        1. [ ] [bash prompt shows git branch etc](#bash-prompt-shows-git-branch-etc)
+        1. [ ] [aliases](#aliases)
+        1. [ ] [colors](#colors)
+5. [ ] [For headless web-browser driving (Selenium)](#5-for-headless-web-browser-driving-selenium)
+    1. [ ] [install](#install)
+        1. [ ] [geckodriver](#geckodriver)
+    1. [ ] [Test headless (xvfb) selenium installation](#test-headless-xvfb-selenium-installation)
 
 
 
@@ -188,7 +210,7 @@ From the computer that you'll `ssh` into your RPi from, generate a ssh keypair:
     Your identification has been saved in /Users/justin/.ssh/rpi-2018.
     Your public key has been saved in /Users/justin/.ssh/rpi-2018.pub.
 
-Copy it onto the SD card:
+Copy it onto the SD card, which mounts at `/Volumes/boot/` on my Mac:
 
     cp -a ~/.ssh/rpi-2018.pub /Volumes/boot/
 
@@ -253,7 +275,7 @@ Use arrow keys & ENTER to move around.
         en_US.utf8
         POSIX
 
-- Verify correct time and timezone:
+- Verify correct timezone (time will get set later, after network connected, or you can set it with `date -s "19 APR 2012 11:14:00"`)
 
         pi@raspberrypi3:~ $ date
         Sun Jun 10 11:46:24 PDT 2018    
@@ -328,8 +350,9 @@ Use arrow keys & ENTER to move around.
 
         $ sudo rm /etc/sudoers.d/*
 
+Log out & back in to apply.
 
-**Verify**: Log out & back in, try to `sudo ls`, it should ask for a pw. Give it your login pw for `pi` user, it should work (perform `ls`). Do `sudo ls` again, it shouldn't ask for pw. In 3 mins, the 'no pw' grace period expires and `sudo ls` should ask for pw again.
+**Verify**: `sudo ls` should prompt a warning then ask for a pw. Give it your login pw for `pi` user, it should perform `ls` as root. Do `sudo ls` again, it shouldn't ask for pw. In 3 mins, the 'no pw' grace period expires and `sudo ls` should ask for pw again.
 
 ## Keyboard configuration
 
@@ -347,7 +370,7 @@ In `/etc/default/keyboard`, change `XKBOPTIONS`:
 
 Reboot.
 
-*Note: This command should apply this new keyboard setting, but it didn't work for me:*
+*Note: The following command should apply this new keyboard setting, but it didn't work for me, so I rebooted:*
 
     invoke-rc.d keyboard-setup start
 
@@ -355,31 +378,67 @@ Verify: in the window manager, in a terminal window, `capslock-p` moves to the p
 
 ### key-repeat
 
-Put in the global xinitrc so it works in any X session:
+Add the line 
 
-    sudo nano /etc/X11/xinit/xinitrc
-
-At the bottom, put
-    
     xset r rate 130 80
+
+to the bottom of the global bashrc file
+
+    sudo nano /etc/bash.bashrc
+
+then reboot.
 
 This means: After holding down a key for 130 ms, the key will be repeated at a rate of 80 chars per sec.
 
-Reboot.
+To make it work at logins shells too, put 
 
-*Note: This command should apply this new keyboard setting, but it didn't work for me:*
+    source /etc/bash.bashrc
+
+at the bottom of `/etc/profile`.
+
+**Verify:** at a terminal window, see if key repeat is nice and fast.
+
+#### Things that didn't work
+
+1. When you ssh in, you may get the error 
+
+    xset:  unable to open display ""
+
+(But the shell still works fine.)
+
+This is probably because ssh is running in an environment where there's no display, so it won't have the X window manager, so `xset` won't work. This may have something to do with interactive/non-interactive and login/non-login shells, but I'm not sure:
+
+- **Interactive**: As the term implies: Interactive means that the commands are run with user-interaction from keyboard. E.g. the shell can prompt the user to enter input.
+
+- **Non-interactive**: the shell is probably run from an automated process so it can't assume if can request input or that someone will see the output. E.g Maybe it is best to write output to a log-file.
+
+- **Login**: Means that the shell is run as part of the login of the user to the system. Typically used to do any configuration that a user needs/wants to establish his work-environment.
+
+- **Non-login**: Any other shell run by the user after logging on, or which is run by any automated process which is not coupled to a logged in user.
+
+([source](https://unix.stackexchange.com/questions/50665/what-is-the-difference-between-interactive-shells-login-shells-non-login-shell))
+
+
+2. I thought I could set key-repeat by putting the `xset` cmd in the global xinitrc:
+
+    sudo nano /etc/X11/xinit/xinitrc
+
+but after a reboot my key-repeat stayed the same.
+
+3. Instead of rebooting, I should've been able to reload the new keyboard config with
 
     invoke-rc.d keyboard-setup start
 
-- If not using X, not sure how to set key repeat.
+4. If you ctrl-alt-F1 to get to a non-X terminal, the `kbdrate` command is how you change the key repeat: Put
 
-If you ctrl-alt-F1 to get to a non-X terminal, the `kbdrate` command is how you change the key repeat:
+        kbdrate -d 130 -r 80
 
-    GLOBAL_BASHRC="/etc/bash.bashrc"
-    echo "kbdrate -r $KEYBD_REPEAT_CHARS_PER_SEC -d $KEYBD_DELAY_UNTIL_REPEAT_MS " >> $GLOBAL_BASHRC
+    at the bottom of
 
+        /etc/bash.bashrc
 
-Verify: at a terminal window, see if key repeat is nice and fast.
+    Note: In X, the `kbdrate` command fails with "kdbrate: Cannot open `/dev/port`: No such file or directory."
+
 
 ## bashrc
 
@@ -403,19 +462,46 @@ Add to `/etc/bash.bashrc` (the global bashrc file):
 Earlier in this tutorial, you created a keypair and copied it to the RPi's SD card.
 
 Now, copy it to the correct place on the RPi:
+    
+    mkdir ~/.ssh
+    cat /boot/rpi-2018.pub >> /home/pi/.ssh/authorized_keys
 
-    $ cat /home/pi/boot/rpi-2018.pub >> /home/pi/.ssh/authorized_keys
+Open `/etc/ssh/sshd_config`
 
-Modify these values in `/etc/ssh/sshd_config`:
+    sudo nano /etc/ssh/sshd_config
 
-    Port 1234
+and modify the following values:
+
+    Port 1234    <---- pick your own port number
     PubkeyAuthentication yes
     ChallengeResponseAuthentication no
     PasswordAuthentication no
     UsePAM no
     PrintMotd yes
-    PermitRootLogin forced-commands-only
+    PermitRootLogin no
 
+*Note*: `PrintMotd` prints the "message of the day" at ssh login, which is stored in `/etc/motd`. 
+
+*Note*: `PermitRootLogin` from `man sshd_config`:
+
+"""
+
+Specifies whether root can log in using ssh(1).  The argument must be yes, prohibit-password, without-password, forced-commands-only, or no.  The default is prohibit-password.
+
+If this option is set to prohibit-password or without-password, password and keyboard-interactive authentication are disabled for root.
+
+If this option is set to forced-commands-only, root login with public key authentication will be allowed, but only if the command option has been specified (which may be useful for taking remote backups even if root login is normally not allowed).  All other authentication methods are disabled for root.
+
+If this option is set to no, root is not allowed to log in.
+
+"""
+
+I previously wanted to be able to back up sensitive files in `/etc/` over rsync so I considered allowing `forced-commands-only`. 
+
+
+See if the ssh daemon is already running:
+
+    sudo service ssh status
 
 Enable the ssh daemon:
 
@@ -427,6 +513,43 @@ or
     invoke-rc.d ssh restart
 
 if it was already running.    
+
+Verify it turned on:
+
+    sudo service ssh status
+
+    ● ssh.service - OpenBSD Secure Shell server
+       Loaded: loaded (/lib/systemd/system/ssh.service; enabled; vendor preset: enabled)
+       Active: active (running) since Wed 2018-06-20 06:12:06 PDT; 13min ago
+     Main PID: 420 (sshd)
+       CGroup: /system.slice/ssh.service
+               ├─ 420 /usr/sbin/sshd -D
+               ├─ 686 sshd: pi [priv]
+               ├─ 688 sshd: pi@pts/0
+               ├─ 690 -bash
+               ├─4266 sudo service ssh status
+               ├─4270 systemctl status ssh.service
+               └─4275 pager
+
+Now we are ready to ssh into the RPi (in the next section).
+
+## static IP address
+
+Use `ifconfig` to get the RPi's MAC address and put it in your router's static leases table (`Services > DHCP Server > Static Leases table`) so the router gives it a non-changing IP address. Then you can hard-code that IP addr into your ssh config file.
+
+## root crontab
+
+(Optional) If you will be leaving the RPi on all the time, consider restarting it once a day to kill zombie processes:
+
+Run `crontab -e` (as root) and add:
+
+    # Reboot once a day, just to kill off weird zombie processes 
+    30 3 * * * reboot
+
+
+# 3. Update software (AS ROOT)
+## plug in internet & ssh in
+
 
 Now you should be able to ssh into the RPi with
 
@@ -459,37 +582,60 @@ Then the command to ssh into the RPi is simply
 - use non-standard port
 - set sshd to start at boot
 
-## root crontab
 
-(Optional) If you will be leaving the RPi on all the time, consider restarting it once a day to kill zombie processes:
-
-Run `crontab -e` (as root) and add:
-
-    # Reboot once a day, just to kill off weird zombie processes 
-    30 3 * * * reboot
-
-
-# 3. Update software (AS ROOT)
-## plug in internet
 ## update
 
-    apt-get update
-    apt-get dist-upgrade -y
+    sudo apt-get update
+    sudo apt-get dist-upgrade -y
 
 ## firewall
 
-    apt-get install -y ufw
-    ufw enable
-    ufw default deny incoming
-    ufw allow from 192.168.11.0/24 to any port 1234 proto tcp # ssh only on local network
-    ufw reload
-    ufw status
+    sudo apt-get install -y ufw
+    sudo ufw logging on
+    sudo ufw default deny incoming
+    sudo ufw allow from 192.168.11.0/24 to any port 1234 proto tcp  ### ssh only on local network -- use the correct ssh port!
+    sudo ufw enable
+    sudo ufw status
+
+
+    Status: active
+
+    To                         Action      From
+    --                         ------      ----
+    3141/tcp                   ALLOW       192.168.11.0/24           
+
+**Verify:** Logging is enabled:
+
+    pi@rpi31:~ $ cat /var/log/ufw.log
+    Jun 20 06:27:43 rpi31 kernel: [  935.239936] [UFW BLOCK] IN=eth0 OUT= MAC=<redacted> SRC=192.168.11.55 DST=224.0.0.251 LEN=32 TOS=0x00 PREC=0x00 TTL=1 ID=3209 PROTO=2 
+    Jun 20 06:31:02 rpi31 kernel: [ 1134.788008] [UFW BLOCK] IN=eth0 OUT= MAC=<redacted> SRC=192.168.11.55 DST=224.0.0.251 LEN=32 TOS=0x00 PREC=0x00 TTL=1 ID=47958 PROTO=2 
+
+From `man ufw`,
+
+Logged packets use the LOG_KERN syslog facility. Systems configured for rsyslog support may also log to /var/log/ufw.log. Specifying a LEVEL turns logging on for the specified LEVEL. The default log level is 'low'.  See LOGGING for details.
+
+Options for `ufw logging LEVEL`: the `LEVEL` is one of {off, low, medium, high, full}. Doing `ufw logging on` uses `low`: 
+
+"low logs all blocked packets not matching the default policy (with rate limiting), as well as packets matching logged rules" 
+
+Details:
+
+<http://troubleshootblog.blogspot.com/2013/02/ufw-logging-level.html>
+<https://serverfault.com/questions/516838/where-are-the-logs-for-ufw-located-on-ubuntu-server>
+
+Note: I also saw that `ufw` seems to log to `dmesg`, not sure if that is a problem:
+
+    pi@rpi31:~ $ dmesg | grep -i ufw
+    [  935.239936] [UFW BLOCK] IN=eth0 OUT= MAC=<redacted> SRC=192.168.11.55 DST=224.0.0.251 LEN=32 TOS=0x00 PREC=0x00 TTL=1 ID=3209 PROTO=2 
+    [ 1134.788008] [UFW BLOCK] IN=eth0 OUT= MAC=<redacted> SRC=192.168.11.55 DST=224.0.0.251 LEN=32 TOS=0x00 PREC=0x00 TTL=1 ID=47958 PROTO=2 
+    [ 1521.965845] [UFW BLOCK] IN=eth0 OUT= MAC=<redacted> SRC=192.168.11.54 DST=224.0.0.251 LEN=32 TOS=0x00 PREC=0x00 TTL=1 ID=10163 PROTO=2 
+
 
 ## install packages
 
-    apt-get install -y mlocate emacs ffmpeg logwatch exim4-daemon-light mutt
-    updatedb  # so 'locate' works
-    apt-get autoremove -y
+    sudo apt-get install -y mlocate emacs ffmpeg logwatch exim4-daemon-light mutt
+    sudo updatedb  # so 'locate' works
+    sudo apt-get autoremove -y
 
 ### exim4 & mutt
 
@@ -502,19 +648,27 @@ Configure the mail system:
 
     dpkg-reconfigure exim4-config
 
-You can accept all defaults except 'what user should receive mail for 'postmaster' or 'root'' ? I said 'pi'.    
+You can accept all defaults except: 
+
+- Root and postmaster mail recipient: `pi`
 
 Test the mail system (as non-root user):
 
     echo "hello world, this message should appear in pi's local mail box." | mail -s "test message sent at $(date +"%Y_%m_%d_%H_%M_%S")" pi
 
-In `mutt`, you should see that message appear.
+In `mutt`, you should see that message appear. `ENTER` to view, `q` to quit.
 
 
 
 # 4. Configure a user
 
-### user's bashrc
+## delete crap out of home directory
+
+- python_games
+- Documents
+
+
+## user's bashrc
 
 Add to `/home/pi/.bashrc`:
 
@@ -523,10 +677,70 @@ Add to `/home/pi/.bashrc`:
     export HISTTIMEFORMAT="%F %T  " 
     export EDITOR="emacs -nw" 
 
-### python 
+(NOTE: Earlier we put these in the global `/etc/bash.bashrc` file. Not sure which takes precedence.)
+
+## python 
+
+What version of `pip` are you using?:
+
+    pi@rpi31:~ $ pip --version
+    # not sure what this outputs on apr 2018 raspbian.
+    # I messed up my pip installation before I could do this step.
+
+
+    pi@rpi31:~ $ pip3 --version
+    pip 9.0.3 from /home/pi/.local/lib/python3.5/site-packages (python 3.5)
+
+Install virtualenv:
+
+    sudo pip install virtualenv
+
+or
+
+    sudo pip3 install virtualenv
+
+if your pip is messed up.
+
+
+**Warning**: Do not upgrade `pip` before installing `virtualenv`. Version 10 of `pip` introduced a non-backward-compatible change:
 
     pip install --upgrade pip
-    pip install virtualenv
+
+    Collecting pip
+      Using cached https://files.pythonhosted.org/packages/0f/74/ecd13431bcc456ed390b44c8a6e917c1820365cbebcb6a8974d1cd045ab4/pip-10.0.1-py2.py3-none-any.whl
+    Installing collected packages: pip
+    Successfully installed pip-10.0.1    
+
+Uh oh: I screwed up my `pip`:
+
+    pi@rpi31:~ $ pip
+    Traceback (most recent call last):
+      File "/usr/bin/pip", line 9, in <module>
+        from pip import main
+    ImportError: cannot import name main
+
+You can try to rollback with:
+
+    pi@rpi31:~ $ python3 -m pip install --user --upgrade pip==9.0.3
+    Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+    Collecting pip==9.0.3
+      Downloading https://files.pythonhosted.org/packages/ac/95/a05b56bb975efa78d3557efa36acaf9cf5d2fd0ee0062060493687432e03/pip-9.0.3-py2.py3-none-any.whl (1.4MB)
+        100% |████████████████████████████████| 1.4MB 3.2MB/s 
+    Installing collected packages: pip
+      Found existing installation: pip 10.0.1
+        Uninstalling pip-10.0.1:
+          Successfully uninstalled pip-10.0.1
+    Successfully installed pip-9.0.3
+    You are using pip version 9.0.3, however version 10.0.1 is available.
+    You should consider upgrading via the 'pip install --upgrade pip' command.
+
+<https://github.com/pypa/pip/issues/5221>
+<https://github.com/pypa/pip/issues/5447>
+<https://github.com/pypa/pip/issues/5240>
+<https://stackoverflow.com/questions/28210269/importerror-cannot-import-name-main-when-running-pip-version-command-in-windo>
+<https://askubuntu.com/questions/1025793/running-pip3-importerror-cannot-import-name-main>
+
+
 
 **As non-root user,** Set up virtualenv and python packages.
 
@@ -539,20 +753,30 @@ Add to `/home/pi/.bashrc`:
     echo "Enabling Python 3..."
     source /home/pi/.virtualenv/python3/bin/activate
 
-    echo "Now using this python:"
-    which python
-    ls -l `which python`
-    python --version
 
-    echo "This is python2:"
-    which python2
-    ls -l `which python2`
-    python2 --version
+    (python3) pi@rpi31:~/.virtualenv $ ls -l `which python`
+    lrwxrwxrwx 1 pi pi 7 Jun 20 07:19 /home/pi/.virtualenv/python3/bin/python -> python3
 
-    echo "This is python3:"
-    which python3
-    ls -l `which python3`
-    python3 --version
+    (python3) pi@rpi31:~/.virtualenv $ python --version
+    Python 3.5.3
+
+    (python3) pi@rpi31:~/.virtualenv $ ls -l `which python2`
+    lrwxrwxrwx 1 root root 9 Jan 24  2017 /usr/bin/python2 -> python2.7
+
+    (python3) pi@rpi31:~/.virtualenv $ python2 --version
+    Python 2.7.13
+
+    (python3) pi@rpi31:~/.virtualenv $ ls -l `which python3`
+    -rwxr-xr-x 1 pi pi 3976264 Jun 20 07:19 /home/pi/.virtualenv/python3/bin/python3
+
+    (python3) pi@rpi31:~/.virtualenv $ python3 --version
+    Python 3.5.3
+
+    (python3) pi@rpi31:~/.virtualenv $ ls -l `which pip`
+    -rwxr-xr-x 1 pi pi 240 Jun 20 07:20 /home/pi/.virtualenv/python3/bin/pip
+
+    (python3) pi@rpi31:~/.virtualenv $ pip --version
+    pip 10.0.1 from /home/pi/.virtualenv/python3/lib/python3.5/site-packages/pip (python 3.5)
 
 Append virtualenv cmds to `/home/pi/.bashrc`:
 
@@ -589,8 +813,15 @@ Check versions:
     python3 -c "import selenium ; print(selenium.__version__)"
     echo "py3 Matplotlib:"
     python3 -c "import matplotlib ; print(matplotlib.__version__)"
+    echo "firefox-esr:"
+    which firefox
+    firefox --version
 
-*(why need `firefox-esr`? Why built-in browser not good enough?)*
+We install Firefox because Raspbian ships with Chromium and I'd prefer to have my Selenium program drive a more privacy-minded browser.
+
+Menu bar > "Web Browser" > Chromium launches, go to 3 dots > "About Chromium":
+
+    Chromium version 65.0.3325.181 (Official Build) Built on Raspbian, running on Raspbian 9.4 (32.bit)
 
 ### geckodriver
 
@@ -604,11 +835,11 @@ Note: You may need to use a different combination of Geckodriver, Firefox, and S
 I got a working configuration:
 
 - bought a $35 Raspberry Pi 3 from Adafruit
-    - Ships with Python 3.5.3
-- lscpu shows it runs ARM7 cpu architecture (required by geckodriver)
+    - Ships with `Python 3.5.3`
+- `lscpu` shows it runs ARM7 cpu architecture (required by geckodriver)
 - Using OS: Raspbian based on Debian Stretch (Sep 7, 2017, linux kernel v4.9)
-- Firefox 52.5.0 (`sudo apt-get install firefox-esr`)
-- geckodriver v0.17.0 for ARM7
+- Firefox `52.5.0` (`sudo apt-get install firefox-esr`)
+- geckodriver `v0.17.0` for ARM7
 - Note: Don't use the latest geckodriver -- you need to pick the one that matches your version of Firefox. This is hard because the geckodriver release notes aren't consistent about saying which version of Firefox and Selenium they're compatible with.
 """
 
@@ -618,7 +849,7 @@ I got a working configuration:
         GECKODRIVER_URL=https://github.com/mozilla/geckodriver/releases/download/v0.17.0/geckodriver-v0.17.0-arm7hf.tar.gz
         wget $GECKODRIVER_URL
         tar xzvf $(basename $GECKODRIVER_URL)
-        cp -a geckodriver /usr/local/bin/
+        sudo cp -a geckodriver /usr/local/bin/
         geckodriver --version
 
 
@@ -651,5 +882,7 @@ Test webdriver:
 
     xvfb-run python -c "import time; import selenium; print('Selenium: ' + selenium.__version__); from selenium import webdriver; d = webdriver.Firefox(); d.get('http://www.google.com'); print(d.page_source); time.sleep(5); d.quit()"
 
-This should print the HTML source of google.com.
+This should print the HTML source of google.com:
+
+    <html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head> <meta content="width=device-width,minimum-scale=1.0" name="viewport"> <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"> <title>Google</title>  <style> ...
 
