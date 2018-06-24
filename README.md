@@ -1,24 +1,29 @@
 # Setting up a new Raspberry Pi from scratch
 
-**Raspberry Pi Travel log:**
+## Raspberry Pi Travel log
 
-- label on rpi case: 
-- location: 
-- purpose: 
-- rpi serial #:
-- mpeg license: 
-- hostname: 
-- static IP addr: 
-- MAC addr:
-- rpi ssh alias: 
-- ssh key name in `~/.ssh/blah.pub`:
-- selenium version:
-- matplotlib version:
-- firefox-esr version:
-- geckodriver version: 
-- RAM: 
-- num cpu cores: 
-- initial version of raspbian: 
+Parameter | Command | Value
+---|---|---
+what model of rpi | n/a | 
+label on rpi case  | n/a | 
+location  | n/a | 
+purpose  | n/a | 
+rpi serial # | `cat /proc/cpuinfo` | 
+mpeg license  | `grep decode_MPG2 /boot/config.txt` | 
+hostname  | `hostname` | 
+static IP addr  | `ifconfig \| grep "inet "` | 
+wired MAC addr | `ifconfig \| grep -A 4 eth0 \| grep ether` | 
+wireless MAC addr | `ifconfig \| grep -A 4 wlan \| grep ether` | 
+rpi ssh alias  | n/a | 
+ssh key name in `~/.ssh/` | n/a | 
+selenium version | `python3 -c "import selenium ; print(selenium.__version__)"` | 
+matplotlib version | `python3 -c "import matplotlib ; print(matplotlib.__version__)"` | 
+firefox-esr version | `firefox --version` | 
+geckodriver version  | `geckodriver --version` | 
+RAM | `free -h`, "Total Mem" | 
+num cpu cores  | `lscpu \| grep "CPU(s):"` | 
+CPU arch | `lscpu \| grep Architecture:` | 
+initial version of raspbian  | `uname -a` | 
 
 # test checkboxes
 
@@ -672,9 +677,8 @@ In `mutt`, you should see that message appear. `ENTER` to view, `q` to quit.
 
 ## delete crap out of home directory
 
-- python_games
-- Documents
-
+    cd ~
+    rm -rf python_games Documents Desktop FirefoxProfiles Mail Music Pictures Public Templates Videos
 
 ## user's bashrc
 
@@ -825,15 +829,15 @@ Check versions:
     which firefox
     firefox --version
 
-We install Firefox because Raspbian ships with Chromium and I'd prefer to have my Selenium program drive a more privacy-minded browser.
+We install Firefox because Raspbian's default browser is Chromium and I'd prefer to have my Selenium program drive a more privacy-minded browser.
 
-Menu bar > "Web Browser" > Chromium launches, go to 3 dots > "About Chromium":
+FYI: Menu bar > "Web Browser" > Chromium launches, go to 3 dots > "About Chromium":
 
     Chromium version 65.0.3325.181 (Official Build) Built on Raspbian, running on Raspbian 9.4 (32.bit)
 
 ### geckodriver
 
-Geckodriver is middleware that allows Selenium to drive Firefox.
+Geckodriver is a middleware binary that allows Selenium to drive Firefox.
 
 Note: You may need to use a different combination of Geckodriver, Firefox, and Selenium. See this thread:
 
