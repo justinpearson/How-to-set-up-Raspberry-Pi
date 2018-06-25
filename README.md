@@ -14,8 +14,8 @@ hostname  | `hostname` |
 static IP addr  | `ifconfig \| grep "inet "` | 
 wired MAC addr | `ifconfig \| grep -A 4 eth0 \| grep ether` | 
 wireless MAC addr | `ifconfig \| grep -A 4 wlan \| grep ether` | 
-rpi ssh alias  | n/a | 
 ssh key name in `~/.ssh/` | n/a | 
+rpi ssh alias in `~/.ssh/config` | n/a | 
 selenium version | `python3 -c "import selenium ; print(selenium.__version__)"` | 
 matplotlib version | `python3 -c "import matplotlib ; print(matplotlib.__version__)"` | 
 firefox-esr version | `firefox --version` | 
@@ -678,7 +678,7 @@ In `mutt`, you should see that message appear. `ENTER` to view, `q` to quit.
 ## delete crap out of home directory
 
     cd ~
-    rm -rf python_games Documents Desktop FirefoxProfiles Mail Music Pictures Public Templates Videos
+    rm -rf python_games Documents Desktop Mail Music Pictures Public Templates Videos
 
 ## user's bashrc
 
@@ -801,13 +801,79 @@ Append virtualenv cmds to `/home/pi/.bashrc`:
 
 
 ### git 
-#### set username & email
-#### bash prompt shows git branch etc
-#### aliases
-##### co
-##### st
-##### lol
-#### colors
+
+Set username & email
+
+    git config --global user.name "Bob Johnson"
+    git config --global user.email "bobjohnson@users.noreply.github.com"
+
+Bash prompt shows git branch:
+
+Something like this:
+
+    # 2017-10-17: git autocomplete at command line                                               
+    # locate git-completion                                                                      
+    # https://git-scm.com/book/en/v1/Git-Basics-Tips-and-Tricks                                  
+    source /usr/local/etc/bash_completion.d/git-completion.bash
+
+    source /usr/local/etc/bash_completion.d/git-prompt.sh
+    GIT_PS1_SHOWDIRTYSTATE=true
+    export PS1='[\u@\h \W$(__git_ps1 " (%s)")]\$ '
+    # export PS1='[\u@mbp \w$(__git_ps1)]\$ '  
+
+(Note: the files `git-completion.bash` may exist in other places like `/etc/` and may be called `git-completion` on a Raspberry Pi.)
+
+Aliases:
+
+
+    git config --global alias.co checkout
+    git config --global alias.br branch
+    git config --global alias.ci commit
+    git config --global alias.st status
+    git config --global alias.unstage 'reset HEAD --'
+    git config --global alias.last 'log -1 HEAD'
+    git config --global alias.lol 'log --oneline --graph --decorate --all'
+
+Colors: ??
+
+### github ssh access 
+
+Configure your rpi so you don't have to re-enter your github password.
+
+generate ssh key:
+
+    ssh-keygen -t rsa -b 4096 -C "your_email@example.com"  # your github email
+
+- give it a passphrase
+
+to not have to type passphrase each time:
+
+    eval "$(ssh-agent -s)"
+    ssh-add ~/.ssh/id_rsa # replace id_rsa with whatever you named the key file.
+
+add to github:
+
+    cat ~/.ssh/id_rsa.pub   # then copy this to clipboard
+
+go to <https://github.com/settings/keys>, "New SSH Key", paste into the Key field.
+
+Note: your local repo remote from github must be set up with `ssh` not `https`. If you git-cloned with `https`, you'll need to change it to `ssh`. From within your repo, do 
+
+    $ git remote -v
+    origin  https://github.com/speezepearson/digisec.git (fetch)
+    origin  https://github.com/speezepearson/digisec.git (push)
+
+To change to ssh, do:
+
+    $ git remote set-url origin git@github.com:speezepearson/digisec.git
+
+Now they're using the ssh protocol:
+
+    $ git remote -v
+    origin  git@github.com:speezepearson/digisec.git (fetch)
+    origin  git@github.com:speezepearson/digisec.git (push)
+
+
 
 
 # 5. For headless web-browser driving (Selenium)
