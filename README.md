@@ -82,7 +82,7 @@ Latest download: <https://downloads.raspberrypi.org/raspbian_latest>
 
 <https://etcher.io/>
 
-![](Images/etcher.png | width=200)
+<img src="Images/etcher.png" width="200">
 
 - Don't have to extract the .zip file, can give it directly to etcher.
 
@@ -192,13 +192,13 @@ The Raspberry Pi has an MPEG-decoder chip that allows you to hardware-accelerate
 
 Without MPG license, one of the 4 CPU cores runs close to 100%:
 
-![](Images/without-mpeg-decoder.png | width=200)
+<img src="Images/without-mpeg-decoder.png" width="200">
 
 (note the `dc:ff-mpeg2video`, which apparently is the software-based codec)
 
 With the MPG license, the CPU load on all cores is less than 5%:
 
-![](Images/with-mpeg-decoder.png | width=200)
+<img src="Images/with-mpeg-decoder.png" width="200">
 
 (note the new codec in use: `dc:omx-mpeg2`)
 
@@ -244,7 +244,7 @@ https://learn.adafruit.com/adafruit-5-800x480-tft-hdmi-monitor-touchscreen-backp
 
 Should see rainbow screen:
 
-![](Images/rpi-rainbow-boot.png | width=100)
+<img src="Images/rpi-rainbow-boot.png" width="100">
 
 # 2. configure linux (AS ROOT)
 
@@ -258,7 +258,7 @@ Start the `raspi-config` configuration tool:
 
 Use arrow keys & ENTER to move around.
 
-![](Images/raspi-config.png | width=250)
+<img src="Images/raspi-config.png" width="250">
 
 1. Do NOT **Change User Password** yet, the keyboard layout isn't set up. We will come back to it after setting locale & keyboard.
 2. Network Options
@@ -727,7 +727,7 @@ or
 
 if your pip is messed up.
 
-<details><summary>Do not upgrade pip!</summary>
+<details><summary>Do not upgrade pip! (expand for details.)</summary>
 <p>
 
 **Warning**: Do not upgrade `pip` before installing `virtualenv`. Version 10 of `pip` introduced a non-backward-compatible change:
@@ -769,6 +769,7 @@ You can try to rollback with:
 <https://askubuntu.com/questions/1025793/running-pip3-importerror-cannot-import-name-main>
 
 </p></details>
+<br/>
 
 
 **As non-root user,** Set up virtualenv and python packages.
@@ -1180,6 +1181,11 @@ Solution: from `sudo service usbmuxd status`, it said it couldn't find a usbmux 
 - Automatically backup when the phone is initially plugged into the RPi. Some ideas:
     - Cronjob that runs every minute looking for the phone? And doesn't step on itself if it's already backing up.
     - Use `udev` rules to auto-run the iphone-backup script.
+        - https://hackaday.com/2009/09/18/how-to-write-udev-rules/
+        - https://askubuntu.com/questions/581810/iphone-does-not-unmount-properly-when-unplugged
+        - https://github.com/libimobiledevice/usbmuxd/issues/26
+        - https://raspberrypi.stackexchange.com/questions/19600/is-there-a-way-to-automatically-activate-a-script-when-a-usb-device-connects
+        - https://unix.stackexchange.com/questions/28548/how-to-run-custom-scripts-upon-usb-device-plug-in
     - Light up LEDs to show me the status or errors during backup.
         - https://www.raspberrypi.org/forums/viewtopic.php?t=127336
         - https://www.jeffgeerling.com/blogs/jeff-geerling/controlling-pwr-act-leds-raspberry-pi
