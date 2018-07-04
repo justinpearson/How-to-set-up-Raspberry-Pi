@@ -4,7 +4,7 @@
 
 Parameter | Command | Value
 ---|---|---
-what model of rpi | n/a | 
+what model of rpi | RPi 2 Model B, 3, Zero W, etc | 
 label on rpi case  | n/a | 
 location  | n/a | 
 purpose  | n/a | 
@@ -15,24 +15,18 @@ static IP addr  | `ifconfig \| grep "inet "` |
 wired MAC addr | `ifconfig \| grep -A 4 eth0 \| grep ether` | 
 wireless MAC addr | `ifconfig \| grep -A 4 wlan \| grep ether` | 
 ssh key name in `~/.ssh/` | n/a | 
+ssh port | n/a | 
 rpi ssh alias in `~/.ssh/config` | n/a | 
 selenium version | `python3 -c "import selenium ; print(selenium.__version__)"` | 
 matplotlib version | `python3 -c "import matplotlib ; print(matplotlib.__version__)"` | 
 firefox-esr version | `firefox --version` | 
 geckodriver version  | `geckodriver --version` | 
 RAM | `free -h`, "Total Mem" | 
-num cpu cores  | `lscpu \| grep "CPU(s):"` | 
-CPU arch | `lscpu \| grep Architecture:` | 
+num cpu cores & speed  | `lscpu \| grep CPU` | 
+CPU arch [1] | `lscpu \| grep Architecture:` | 
 initial version of raspbian  | `uname -a` | 
 
-# test checkboxes
-
-- [ ] 1. foo
-- [ ] 2. bar
-    - [ ] 1. baz
-    - [ ] 2. marf
-- [ ] 3. gorg
-- [ ] 4. flag    
+[1] If ARM v6l, can't run Selenium unless build Geckodriver from source
 
 # Table of Contents
 
@@ -88,7 +82,7 @@ Latest download: <https://downloads.raspberrypi.org/raspbian_latest>
 
 <https://etcher.io/>
 
-![](Images/etcher.png)
+![](Images/etcher.png | width=200)
 
 - Don't have to extract the .zip file, can give it directly to etcher.
 
@@ -198,13 +192,13 @@ The Raspberry Pi has an MPEG-decoder chip that allows you to hardware-accelerate
 
 Without MPG license, one of the 4 CPU cores runs close to 100%:
 
-![](Images/without-mpeg-decoder.png)
+![](Images/without-mpeg-decoder.png | width=200)
 
 (note the `dc:ff-mpeg2video`, which apparently is the software-based codec)
 
 With the MPG license, the CPU load on all cores is less than 5%:
 
-![](Images/with-mpeg-decoder.png)
+![](Images/with-mpeg-decoder.png | width=200)
 
 (note the new codec in use: `dc:omx-mpeg2`)
 
@@ -227,11 +221,30 @@ Copy it onto the SD card, which mounts at `/Volumes/boot/` on my Mac:
 
     cp -a ~/.ssh/rpi-2018.pub /Volumes/boot/
 
+## HDMI Touchscreen
+
+If using Adafruit's 7" 800x480 HDMI touchscreen, edit `config.txt` on the SD card to size the video correctly:
+
+Source:
+
+https://learn.adafruit.com/adafruit-5-800x480-tft-hdmi-monitor-touchscreen-backpack/raspberry-pi-config
+
+    # uncomment if hdmi display is not detected and composite is being output
+    hdmi_force_hotplug=1
+     
+    # uncomment to force a specific HDMI mode (here we are forcing 800x480!)
+    hdmi_group=2
+    hdmi_mode=87
+    hdmi_cvt=800 480 60 6 0 0 0
+    hdmi_drive=1
+     
+    max_usb_current=1
+
 ## Power up with keyboard, mouse, monitor
 
 Should see rainbow screen:
 
-![](Images/rpi-rainbow-boot.png)
+![](Images/rpi-rainbow-boot.png | width=100)
 
 # 2. configure linux (AS ROOT)
 
@@ -245,7 +258,7 @@ Start the `raspi-config` configuration tool:
 
 Use arrow keys & ENTER to move around.
 
-![](Images/raspi-config.png)
+![](Images/raspi-config.png | width=250)
 
 1. Do NOT **Change User Password** yet, the keyboard layout isn't set up. We will come back to it after setting locale & keyboard.
 2. Network Options
@@ -258,6 +271,7 @@ Use arrow keys & ENTER to move around.
         - Uncheck `en_GB`
         - Check `en_US ISO-8859-1`, `en_US.ISO-8859-15 ISO-8859-15`, and `en_US.UTF-8 UTF-8`   
         - Default locale: `en_US`
+        - **Important:** After this, do "Finish", "reboot now", to avoid errors like 'no locale exists'. (default user/pw is pi/raspberry .)
     2. Change Timezone
         - Geographic area: `US`
         - Time zone: Pacific Ocean
@@ -288,7 +302,7 @@ Use arrow keys & ENTER to move around.
         en_US.utf8
         POSIX
 
-- Verify correct timezone (time will get set later, after network connected, or you can set it with `date -s "19 APR 2012 11:14:00"`)
+- Verify correct timezone (time will get set later, after network connected, or you can set it with `sudo date -s "19 APR 2012 11:14:00"`)
 
         pi@raspberrypi3:~ $ date
         Sun Jun 10 11:46:24 PDT 2018    
@@ -371,7 +385,7 @@ Log out & back in to apply.
 
 Next we make `capslock` act as a `control` key, and set the key repeat nice and fast.
 
-It's important to note that many keyboard config settings that people suggest only work in a graphical X session, and do not work at a raw terminal session like the terminal you get with `ctrl-alt-F1` (do `ctrl-alt-F7` to get back to your window session).
+It's important to note that many keyboard config settings that people suggest only work in a graphical X session, and do not work at a raw terminal session like the terminal you get with `ctrl-alt-F1` (do `ctrl-alt-F7` to get back to your window session). If you are using a raw terminal, set key repeat by putting `kbdrate -d 130 -r 80` at the bottom of `/etc/bash.bashrc`.
 
 ### Capslock to ctrl
 
@@ -415,7 +429,7 @@ at the bottom of `/etc/profile`.
 
 1. When you ssh in, you may get the error 
 
-    xset:  unable to open display ""
+        xset:  unable to open display ""
 
 (But the shell still works fine.)
 
@@ -434,13 +448,13 @@ This is probably because ssh is running in an environment where there's no displ
 
 2. I thought I could set key-repeat by putting the `xset` cmd in the global xinitrc:
 
-    sudo nano /etc/X11/xinit/xinitrc
+        sudo nano /etc/X11/xinit/xinitrc
 
 but after a reboot my key-repeat stayed the same.
 
 3. Instead of rebooting, I should've been able to reload the new keyboard config with
 
-    invoke-rc.d keyboard-setup start
+        invoke-rc.d keyboard-setup start
 
 4. If you ctrl-alt-F1 to get to a non-X terminal, the `kbdrate` command is how you change the key repeat: Put
 
@@ -492,6 +506,8 @@ and modify the following values:
     UsePAM no
     PrintMotd yes
     PermitRootLogin no
+    MaxAuthTries 3
+    MaxSessions 3
 
 *Note*: `PrintMotd` prints the "message of the day" at ssh login, which is stored in `/etc/motd`. 
 
@@ -518,14 +534,12 @@ See if the ssh daemon is already running:
 
 Enable the ssh daemon:
 
-    update-rc.d ssh enable 
-    invoke-rc.d ssh start
+    sudo update-rc.d ssh enable 
+    sudo invoke-rc.d ssh start
 
-or
+or, if it was already running,
 
-    invoke-rc.d ssh restart
-
-if it was already running.    
+    sudo invoke-rc.d ssh restart
 
 Verify it turned on:
 
@@ -659,7 +673,7 @@ It's usefult to have the local mail system set up:
 
 Configure the mail system:
 
-    dpkg-reconfigure exim4-config
+    sudo dpkg-reconfigure exim4-config
 
 You can accept all defaults except: 
 
@@ -696,9 +710,9 @@ Add to `/home/pi/.bashrc`:
 What version of `pip` are you using?:
 
     pi@rpi31:~ $ pip --version
-    # not sure what this outputs on apr 2018 raspbian.
-    # I messed up my pip installation before I could do this step.
 
+    pip 9.0.1 from user/lib/python2.7 dist_packages Python 2.7 # or something
+    # this was for apr 2018 raspbian
 
     pi@rpi31:~ $ pip3 --version
     pip 9.0.3 from /home/pi/.local/lib/python3.5/site-packages (python 3.5)
@@ -713,6 +727,8 @@ or
 
 if your pip is messed up.
 
+<details><summary>Do not upgrade pip!</summary>
+<p>
 
 **Warning**: Do not upgrade `pip` before installing `virtualenv`. Version 10 of `pip` introduced a non-backward-compatible change:
 
@@ -752,6 +768,7 @@ You can try to rollback with:
 <https://stackoverflow.com/questions/28210269/importerror-cannot-import-name-main-when-running-pip-version-command-in-windo>
 <https://askubuntu.com/questions/1025793/running-pip3-importerror-cannot-import-name-main>
 
+</p></details>
 
 
 **As non-root user,** Set up virtualenv and python packages.
@@ -765,30 +782,41 @@ You can try to rollback with:
     echo "Enabling Python 3..."
     source /home/pi/.virtualenv/python3/bin/activate
 
+Here's the current python setup:
 
-    (python3) pi@rpi31:~/.virtualenv $ ls -l `which python`
-    lrwxrwxrwx 1 pi pi 7 Jun 20 07:19 /home/pi/.virtualenv/python3/bin/python -> python3
+    ls -l `which python`
+    python --version
+    ls -l `which python2`
+    python2 --version
+    ls -l `which python3`
+    python3 --version
+    ls -l `which pip`
+    pip --version
+    ls -l `which pip3`
+    pip3 --version
 
-    (python3) pi@rpi31:~/.virtualenv $ python --version
-    Python 3.5.3
+Example output:
 
-    (python3) pi@rpi31:~/.virtualenv $ ls -l `which python2`
-    lrwxrwxrwx 1 root root 9 Jan 24  2017 /usr/bin/python2 -> python2.7
-
-    (python3) pi@rpi31:~/.virtualenv $ python2 --version
+    pi@rpi01:~/.virtualenv $ ls -l `which python`
+    lrwxrwxrwx 1 root root 9 Jan 24  2017 /usr/bin/python -> python2.7
+    pi@rpi01:~/.virtualenv $ python --version
     Python 2.7.13
-
-    (python3) pi@rpi31:~/.virtualenv $ ls -l `which python3`
-    -rwxr-xr-x 1 pi pi 3976264 Jun 20 07:19 /home/pi/.virtualenv/python3/bin/python3
-
-    (python3) pi@rpi31:~/.virtualenv $ python3 --version
+    pi@rpi01:~/.virtualenv $ ls -l `which python2`
+    lrwxrwxrwx 1 root root 9 Jan 24  2017 /usr/bin/python2 -> python2.7
+    pi@rpi01:~/.virtualenv $ python2 --version
+    Python 2.7.13
+    pi@rpi01:~/.virtualenv $ ls -l `which python3`
+    lrwxrwxrwx 1 root root 9 Jan 20  2017 /usr/bin/python3 -> python3.5
+    pi@rpi01:~/.virtualenv $ python3 --version
     Python 3.5.3
-
-    (python3) pi@rpi31:~/.virtualenv $ ls -l `which pip`
-    -rwxr-xr-x 1 pi pi 240 Jun 20 07:20 /home/pi/.virtualenv/python3/bin/pip
-
-    (python3) pi@rpi31:~/.virtualenv $ pip --version
-    pip 10.0.1 from /home/pi/.virtualenv/python3/lib/python3.5/site-packages/pip (python 3.5)
+    pi@rpi01:~/.virtualenv $ ls -l `which pip`
+    -rwxr-xr-x 1 root root 292 Feb 26 12:48 /usr/bin/pip
+    pi@rpi01:~/.virtualenv $ pip --version
+    pip 9.0.1 from /usr/lib/python2.7/dist-packages (python 2.7)
+    pi@rpi01:~/.virtualenv $ ls -l `which pip3`
+    -rwxr-xr-x 1 root root 293 Feb 26 12:48 /usr/bin/pip3
+    pi@rpi01:~/.virtualenv $ pip3 --version
+    pip 9.0.1 from /usr/lib/python3/dist-packages (python 3.5)
 
 Append virtualenv cmds to `/home/pi/.bashrc`:
 
@@ -797,7 +825,6 @@ Append virtualenv cmds to `/home/pi/.bashrc`:
     # Turn on python3:
     source ~/.virtualenv/python3/bin/activate  # Warning: Must come after path-mangling lines like export PATH=usr/local/bin:$PATH"
 
-**NOTE: How ensure python 3 set up right?**
 
 
 ### git 
@@ -877,6 +904,8 @@ Now they're using the ssh protocol:
 
 
 # 5. For headless web-browser driving (Selenium)
+
+Warning: The Raspberry Pi Zero W has a ARM v6 CPU architecture (do `lscpu`). Geckodriver does not release a pre-built binary for this arch, and building it yourself requires installing the huge Firefox build chain. Also, the RPi Zero is pretty underpowered for web-browsing. So I wouldn't recommend using a RPi Zero for Selenium stuff.
 
 ## install
 
@@ -963,4 +992,195 @@ Test webdriver:
 This should print the HTML source of google.com:
 
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head> <meta content="width=device-width,minimum-scale=1.0" name="viewport"> <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"> <title>Google</title>  <style> ...
+
+
+# 6. For iPhone backup
+
+You can use a Raspberry Pi (even a RPi Zero) to backup your iphone. When you plug in your phone at night, plug it into a RPi instead of the wall. Then the RPi will charge it and copy its photos, music, etc onto the RPi's micro-SD card.
+
+Mounting an iphone doesn't seem to be supported by Raspbian by default. Not even the versions of `libimobiledevice` and `ifuse` available through `apt-get install` worked for me. So I followed [samrocketman's instructions](https://gist.github.com/samrocketman/70dff6ebb18004fc37dc5e33c259a0fc) for installing `libimobiledevice` and `ifuse` from source. 
+
+Here are his instructions with my additions.
+
+## Setup
+
+See if you have the `usbmux` user:
+
+    grep usb /etc/passwd
+
+If not, install `usbmuxd` with `apt-get` to force the creation of the `usbmux` user:
+
+    sudo apt-get install usbmuxd
+
+Now you should have the `usbmux` user:
+
+    (python3) pi@rpi01:~ $ grep usb /etc/passwd
+    usbmux:x:112:46:usbmux daemon,,,:/var/lib/usbmux:/bin/false
+
+Remove packages that we're going to build from source:
+
+    sudo apt-get remove libimobiledevice6 ifuse usbmuxd
+
+Verify you still have the `usbmux` user.
+
+
+**REBOOT**
+
+Add to your `.bashrc` some config that lets us build code in `~/usr` :
+
+
+    [ ! -d "$HOME/usr/src" ] && mkdir -p "$HOME/usr/src"
+    export PKG_CONFIG_PATH="${HOME}/usr/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    export CPATH="${HOME}/usr/include:${CPATH}"
+
+    export MANPATH="${HOME}/usr/share/man:${MANPATH}"
+
+    export PATH="${HOME}/usr/bin:${PATH}"
+    export LD_LIBRARY_PATH="${HOME}/usr/lib:${LD_LIBRARY_PATH}"
+
+Don't forget to 
+
+    source ~/.bashrc
+
+to take effect.
+
+Install packages:
+
+    sudo apt-get install -y build-essential git
+
+    sudo apt-get install automake libtool pkg-config libplist-dev libplist++-dev python-dev libssl-dev libusb-1.0-0-dev libfuse-dev
+
+Get source:
+
+    mkdir -p ~/usr/src
+    cd ~/usr/src
+    for x in libusbmuxd usbmuxd libimobiledevice ifuse; do git clone https://github.com/libimobiledevice/${x}.git;done
+
+Build sources (order matters):
+
+    cd ~/usr/src/libusbmuxd
+    ./autogen.sh --prefix="$HOME/usr"
+    make && make install
+    cd ~/usr/src/libimobiledevice
+    ./autogen.sh --prefix="$HOME/usr"
+    make && make install
+    cd ~/usr/src/usbmuxd
+    ./autogen.sh --prefix="$HOME/usr"
+    make && sudo make install
+
+Can't paste subsequent lines with the first block because it'll give subsequent lines as pw attempts to `sudo`.
+    
+    cd ~/usr/src/ifuse
+    ./autogen.sh --prefix="$HOME/usr"
+    make && make install
+
+Verify `ifuse` and `idevicepair` resolve to your new versions in `~/usr/bin/`:
+    
+    type -P ifuse
+    type -P idevicepair
+
+should show
+
+    /home/pi/usr/bin/ifuse
+    /home/pi/usr/bin/idevicepair
+
+**REBOOT**
+
+
+
+The `usbmuxd` service isn't started on boot, it seems:
+
+    (python3) pi@rpi01:~ $ sudo service usbmuxd status
+    [sudo] password for pi: 
+    ● usbmuxd.service - Socket daemon for the usbmux protocol used by Apple devices
+       Loaded: loaded (/lib/systemd/system/usbmuxd.service; static; vendor preset: enabled)
+       Active: inactive (dead)
+         Docs: man:usbmuxd(8)
+
+Verify it starts correctly:
+
+    (python3) pi@rpi01:~ $ sudo service usbmuxd start
+    (python3) pi@rpi01:~ $ sudo service usbmuxd status
+    ● usbmuxd.service - Socket daemon for the usbmux protocol used by Apple devices
+       Loaded: loaded (/lib/systemd/system/usbmuxd.service; static; vendor preset: enabled)
+       Active: active (running) since Wed 2018-07-04 07:40:06 PDT; 4s ago
+         Docs: man:usbmuxd(8)
+     Main PID: 968 (usbmuxd)
+       CGroup: /system.slice/usbmuxd.service
+               └─968 /home/pi/usr/sbin/usbmuxd --user usbmux --systemd
+
+
+
+Show real-time updates from the system log:
+
+    (python3) pi@rpi01:~ $ dmesg -wH
+
+Plug in phone, it works! Have to click "Trust" on the phone too.
+
+    (python3) pi@rpi01:~ $ dmesg -wH
+    [Jul 4 07:43] dwc_otg_handle_wakeup_detected_intr lxstate = 2
+    [  +0.506597] usb 1-1.3: new high-speed USB device number 3 using dwc_otg
+    [  +0.133126] usb 1-1.3: New USB device found, idVendor=05ac, idProduct=12a8
+    [  +0.000025] usb 1-1.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+    [  +0.000012] usb 1-1.3: Product: iPhone
+    [  +0.000010] usb 1-1.3: Manufacturer: Apple Inc.
+    [  +0.000010] usb 1-1.3: SerialNumber: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    [  +0.258682] ipheth 1-1.3:4.2: Apple iPhone USB Ethernet device attached
+    [  +0.011945] usbcore: registered new interface driver ipheth
+    [  +0.348555] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+
+
+
+
+## Backing up
+
+We'll mount the iphone here:
+
+    mkdir -p ~/usr/mnt
+
+1. plug in iphone to rpi
+2. on phone, dialog should pop up: do you want to trust this computer? Click "Trust" & enter passcode.
+
+Here we go:
+
+    # set -e # bail if fail, optional
+
+    sudo service usbmuxd start # only if sudo service usbmuxd status shows it's not running
+    idevicepair --debug pair  # should try up to 5 times or so
+    ifuse --debug ~/usr/mnt
+    rsync -v -a ~/usr/mnt ~/iphone-backups
+    fusermount -u ~/usr/mnt
+    idevicepair --debug unpair
+
+
+Example:
+
+    (python3) pi@rpi01:~ $ idevicepair --debug pair
+    SUCCESS: Paired with device XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+    (python3) pi@rpi01:~ $ ifuse --debug ~/usr/mnt
+    
+    (python3) pi@rpi01:~ $ ls ~/usr/mnt
+    AirFair  CloudAssets  Downloads       LoFiCloudAssets  PhotoData  Podcasts       Purchases  Recordings  Vibrations
+    Books    DCIM         iTunes_Control  MediaAnalysis    Photos     PublicStaging  Radio      Safari
+
+
+## Troubleshooting
+
+<details><summary>Phone doesn't charge when plugged in to RPi</summary>
+<p>
+Problem: iphone buzzes twice and appears to not be charging. It's like it tries to negotiate with the rpi but fails so disconnects entirely.
+
+Solution: from `sudo service usbmuxd status`, it said it couldn't find a usbmux user. I apt-get installed usbmuxd to force the creation of the user, then apt-get removed it and built it again from source.
+</p>
+</details>
+
+## Todo
+
+- Automatically backup when the phone is initially plugged into the RPi. Some ideas:
+    - Cronjob that runs every minute looking for the phone? And doesn't step on itself if it's already backing up.
+    - Use `udev` rules to auto-run the iphone-backup script.
+    - Light up LEDs to show me the status or errors during backup.
+        - https://www.raspberrypi.org/forums/viewtopic.php?t=127336
+        - https://www.jeffgeerling.com/blogs/jeff-geerling/controlling-pwr-act-leds-raspberry-pi
 
