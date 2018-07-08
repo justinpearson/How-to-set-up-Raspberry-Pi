@@ -615,6 +615,16 @@ Then the command to ssh into the RPi is simply
     sudo apt-get update
     sudo apt-get dist-upgrade -y
 
+## remove triggerhappy 
+
+    sudo apt-get remove triggerhappy 
+
+"Triggerhappy watches connected input devices for certain key presses or other input events and runs administrator-configured commands when they occur. Unlike other hotkey daemons, it runs as a persistent, systemwide service and therefore can be used even outside the context of a user or X11 session."
+
+<https://packages.debian.org/sid/triggerhappy>
+
+
+
 ## firewall
 
     sudo apt-get install -y ufw
@@ -660,7 +670,7 @@ Note: I also saw that `ufw` seems to log to `dmesg`, not sure if that is a probl
 
 ## install packages
 
-    sudo apt-get install -y mlocate emacs ffmpeg logwatch exim4-daemon-light mutt
+    sudo apt-get install -y mlocate emacs ffmpeg exim4-daemon-light mutt logwatch
     sudo updatedb  # so 'locate' works
     sudo apt-get autoremove -y
 
@@ -685,6 +695,40 @@ Test the mail system (as non-root user):
 
 In `mutt`, you should see that message appear. `ENTER` to view, `q` to quit.
 
+Verify `logwatch` is set up:
+
+    find /etc/ -iname "*logwatch*"
+
+    /etc/logwatch
+    /etc/cron.daily/00logwatch
+
+Ok, when is `cron.daily` run?
+
+    grep daily /etc/crontab
+
+    25 6    * * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+
+So logwatch should run every day at 6:25am.
+
+It will run `/usr/sbin/logwatch --output mail`, says its daily cronjob:
+
+    (python3) pi@rpi01:~ $ cat /etc/cron.daily/00logwatch
+    #!/bin/bash
+
+    #Check if removed-but-not-purged
+    test -x /usr/share/logwatch/scripts/logwatch.pl || exit 0
+
+    #execute
+    /usr/sbin/logwatch --output mail
+
+    #Note: It's possible to force the recipient in above command
+    #Just pass --mailto address@a.com instead of --output mail
+
+You should run
+
+    `/usr/sbin/logwatch --output mail`
+
+and verify you get mail in your `mutt`.
 
 
 # 4. Configure a user
@@ -994,199 +1038,8 @@ This should print the HTML source of google.com:
 
     <html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head> <meta content="width=device-width,minimum-scale=1.0" name="viewport"> <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"> <title>Google</title>  <style> ...
 
+# 6. Backup iPhone to Raspberry Pi when you plug it in
 
-# 6. For iPhone backup
+<https://github.com:justinpearson/Raspberry-Pi-for-iPhone-Backup>
 
-You can use a Raspberry Pi (even a RPi Zero) to backup your iphone. When you plug in your phone at night, plug it into a RPi instead of the wall. Then the RPi will charge it and copy its photos, music, etc onto the RPi's micro-SD card.
-
-Mounting an iphone doesn't seem to be supported by Raspbian by default. Not even the versions of `libimobiledevice` and `ifuse` available through `apt-get install` worked for me. So I followed [samrocketman's instructions](https://gist.github.com/samrocketman/70dff6ebb18004fc37dc5e33c259a0fc) for installing `libimobiledevice` and `ifuse` from source. 
-
-Here are his instructions with my additions.
-
-## Setup
-
-See if you have the `usbmux` user:
-
-    grep usb /etc/passwd
-
-If not, install `usbmuxd` with `apt-get` to force the creation of the `usbmux` user:
-
-    sudo apt-get install usbmuxd
-
-Now you should have the `usbmux` user:
-
-    (python3) pi@rpi01:~ $ grep usb /etc/passwd
-    usbmux:x:112:46:usbmux daemon,,,:/var/lib/usbmux:/bin/false
-
-Remove packages that we're going to build from source:
-
-    sudo apt-get remove libimobiledevice6 ifuse usbmuxd
-
-Verify you still have the `usbmux` user.
-
-
-**REBOOT**
-
-Add to your `.bashrc` some config that lets us build code in `~/usr` :
-
-
-    [ ! -d "$HOME/usr/src" ] && mkdir -p "$HOME/usr/src"
-    export PKG_CONFIG_PATH="${HOME}/usr/lib/pkgconfig:${PKG_CONFIG_PATH}"
-    export CPATH="${HOME}/usr/include:${CPATH}"
-
-    export MANPATH="${HOME}/usr/share/man:${MANPATH}"
-
-    export PATH="${HOME}/usr/bin:${PATH}"
-    export LD_LIBRARY_PATH="${HOME}/usr/lib:${LD_LIBRARY_PATH}"
-
-Don't forget to 
-
-    source ~/.bashrc
-
-to take effect.
-
-Install packages:
-
-    sudo apt-get install -y build-essential git
-
-    sudo apt-get install automake libtool pkg-config libplist-dev libplist++-dev python-dev libssl-dev libusb-1.0-0-dev libfuse-dev
-
-Get source:
-
-    mkdir -p ~/usr/src
-    cd ~/usr/src
-    for x in libusbmuxd usbmuxd libimobiledevice ifuse; do git clone https://github.com/libimobiledevice/${x}.git;done
-
-Build sources (order matters):
-
-    cd ~/usr/src/libusbmuxd
-    ./autogen.sh --prefix="$HOME/usr"
-    make && make install
-    cd ~/usr/src/libimobiledevice
-    ./autogen.sh --prefix="$HOME/usr"
-    make && make install
-    cd ~/usr/src/usbmuxd
-    ./autogen.sh --prefix="$HOME/usr"
-    make && sudo make install
-
-Can't paste subsequent lines with the first block because it'll give subsequent lines as pw attempts to `sudo`.
-    
-    cd ~/usr/src/ifuse
-    ./autogen.sh --prefix="$HOME/usr"
-    make && make install
-
-Verify `ifuse` and `idevicepair` resolve to your new versions in `~/usr/bin/`:
-    
-    type -P ifuse
-    type -P idevicepair
-
-should show
-
-    /home/pi/usr/bin/ifuse
-    /home/pi/usr/bin/idevicepair
-
-**REBOOT**
-
-
-
-The `usbmuxd` service isn't started on boot, it seems:
-
-    (python3) pi@rpi01:~ $ sudo service usbmuxd status
-    [sudo] password for pi: 
-    ● usbmuxd.service - Socket daemon for the usbmux protocol used by Apple devices
-       Loaded: loaded (/lib/systemd/system/usbmuxd.service; static; vendor preset: enabled)
-       Active: inactive (dead)
-         Docs: man:usbmuxd(8)
-
-Verify it starts correctly:
-
-    (python3) pi@rpi01:~ $ sudo service usbmuxd start
-    (python3) pi@rpi01:~ $ sudo service usbmuxd status
-    ● usbmuxd.service - Socket daemon for the usbmux protocol used by Apple devices
-       Loaded: loaded (/lib/systemd/system/usbmuxd.service; static; vendor preset: enabled)
-       Active: active (running) since Wed 2018-07-04 07:40:06 PDT; 4s ago
-         Docs: man:usbmuxd(8)
-     Main PID: 968 (usbmuxd)
-       CGroup: /system.slice/usbmuxd.service
-               └─968 /home/pi/usr/sbin/usbmuxd --user usbmux --systemd
-
-
-
-Show real-time updates from the system log:
-
-    (python3) pi@rpi01:~ $ dmesg -wH
-
-Plug in phone, it works! Have to click "Trust" on the phone too.
-
-    (python3) pi@rpi01:~ $ dmesg -wH
-    [Jul 4 07:43] dwc_otg_handle_wakeup_detected_intr lxstate = 2
-    [  +0.506597] usb 1-1.3: new high-speed USB device number 3 using dwc_otg
-    [  +0.133126] usb 1-1.3: New USB device found, idVendor=05ac, idProduct=12a8
-    [  +0.000025] usb 1-1.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-    [  +0.000012] usb 1-1.3: Product: iPhone
-    [  +0.000010] usb 1-1.3: Manufacturer: Apple Inc.
-    [  +0.000010] usb 1-1.3: SerialNumber: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    [  +0.258682] ipheth 1-1.3:4.2: Apple iPhone USB Ethernet device attached
-    [  +0.011945] usbcore: registered new interface driver ipheth
-    [  +0.348555] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
-
-
-
-
-## Backing up
-
-We'll mount the iphone here:
-
-    mkdir -p ~/usr/mnt
-
-1. plug in iphone to rpi
-2. on phone, dialog should pop up: do you want to trust this computer? Click "Trust" & enter passcode.
-
-Here we go:
-
-    # set -e # bail if fail, optional
-
-    sudo service usbmuxd start # only if sudo service usbmuxd status shows it's not running
-    idevicepair --debug pair  # should try up to 5 times or so
-    ifuse --debug ~/usr/mnt
-    rsync -v -a ~/usr/mnt ~/iphone-backups
-    fusermount -u ~/usr/mnt
-    idevicepair --debug unpair
-
-
-Example:
-
-    (python3) pi@rpi01:~ $ idevicepair --debug pair
-    SUCCESS: Paired with device XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-    (python3) pi@rpi01:~ $ ifuse --debug ~/usr/mnt
-    
-    (python3) pi@rpi01:~ $ ls ~/usr/mnt
-    AirFair  CloudAssets  Downloads       LoFiCloudAssets  PhotoData  Podcasts       Purchases  Recordings  Vibrations
-    Books    DCIM         iTunes_Control  MediaAnalysis    Photos     PublicStaging  Radio      Safari
-
-
-## Troubleshooting
-
-<details><summary>Phone doesn't charge when plugged in to RPi</summary>
-<p>
-Problem: iphone buzzes twice and appears to not be charging. It's like it tries to negotiate with the rpi but fails so disconnects entirely.
-
-Solution: from `sudo service usbmuxd status`, it said it couldn't find a usbmux user. I apt-get installed usbmuxd to force the creation of the user, then apt-get removed it and built it again from source.
-</p>
-</details>
-
-## Todo
-
-- Automatically backup when the phone is initially plugged into the RPi. Some ideas:
-    - Cronjob that runs every minute looking for the phone? And doesn't step on itself if it's already backing up.
-    - Use `udev` rules to auto-run the iphone-backup script.
-        - https://hackaday.com/2009/09/18/how-to-write-udev-rules/
-        - https://askubuntu.com/questions/581810/iphone-does-not-unmount-properly-when-unplugged
-        - https://github.com/libimobiledevice/usbmuxd/issues/26
-        - https://raspberrypi.stackexchange.com/questions/19600/is-there-a-way-to-automatically-activate-a-script-when-a-usb-device-connects
-        - https://unix.stackexchange.com/questions/28548/how-to-run-custom-scripts-upon-usb-device-plug-in
-    - Light up LEDs to show me the status or errors during backup.
-        - https://www.raspberrypi.org/forums/viewtopic.php?t=127336
-        - https://www.jeffgeerling.com/blogs/jeff-geerling/controlling-pwr-act-leds-raspberry-pi
 
