@@ -11,9 +11,9 @@ purpose  | n/a |
 rpi serial # | `cat /proc/cpuinfo` | 
 mpeg license  | `grep decode_MPG2 /boot/config.txt` | 
 hostname  | `hostname` | 
-static IP addr  | `ifconfig \| grep "inet "` | 
-wired MAC addr | `ifconfig \| grep -A 4 eth0 \| grep ether` | 
-wireless MAC addr | `ifconfig \| grep -A 4 wlan \| grep ether` | 
+static IP addr  | `ifconfig -a \| grep "inet "`  (or from router) | 
+wired MAC addr | `ifconfig -a \| grep -A 4 eth0 \| grep ether` | 
+wireless MAC addr | `ifconfig -a \| grep -A 4 wlan \| grep ether` | 
 ssh key name in `~/.ssh/` | n/a | 
 ssh port | n/a | 
 rpi ssh alias in `~/.ssh/config` | n/a | 
@@ -203,6 +203,14 @@ With the MPG license, the CPU load on all cores is less than 5%:
 (note the new codec in use: `dc:omx-mpeg2`)
 
 
+## Kernel command-line 
+
+`/boot/cmdline.txt`
+
+- disable bluetooth
+- disable 'quiet'
+- disable 'splash screen'
+
 
 ## Key generation for `ssh`
 
@@ -250,6 +258,8 @@ Should see rainbow screen:
 
 **Important**: do not give network access yet.
 
+**Note**: As of June 2018, Raspbian starts up and asks to set locale and password, nice. So maybe can skip steps 4.1 below
+
 ## `raspi-config`
 
 Start the `raspi-config` configuration tool:
@@ -269,12 +279,12 @@ Use arrow keys & ENTER to move around.
 4. Localisation Options
     1. Change Locale
         - Uncheck `en_GB`
-        - Check `en_US ISO-8859-1`, `en_US.ISO-8859-15 ISO-8859-15`, and `en_US.UTF-8 UTF-8`   
-        - Default locale: `en_US`
+        - Check `en_US.UTF-8 UTF-8`   
+        - Default locale: `en_US.UTF-8`
         - **Important:** After this, do "Finish", "reboot now", to avoid errors like 'no locale exists'. (default user/pw is pi/raspberry .)
     2. Change Timezone
-        - Geographic area: `US`
-        - Time zone: Pacific Ocean
+        - Geographic area: `America`
+        - Time zone: `Los Angeles`
     3. Change Keyboard Layout
         - Generic 105-key (Intl) PC
         - Keyboard layout: English (US)
@@ -296,9 +306,6 @@ Use arrow keys & ENTER to move around.
         pi@raspberrypi3:~ $ locale -a
         C
         C.UTF-8
-        en_US
-        en_US.iso88591
-        en_US.iso885915
         en_US.utf8
         POSIX
 
@@ -423,6 +430,8 @@ To make it work at logins shells too, put
 
 at the bottom of `/etc/profile`.
 
+Close & reopen terminal window to take effect.
+
 **Verify:** at a terminal window, see if key repeat is nice and fast.
 
 #### Things that didn't work
@@ -475,6 +484,8 @@ Add to `/etc/bash.bashrc` (the global bashrc file):
     alias emacs="emacs -nw" 
     export HISTTIMEFORMAT="%F %T  " 
     export EDITOR="emacs -nw" 
+
+Close & reopen terminal to take effect.
 
 **Verify:**
 
@@ -533,6 +544,12 @@ See if the ssh daemon is already running:
     sudo service ssh status
 
 Enable the ssh daemon:
+
+    sudo raspi-config
+
+Interfacing options > ssh > enable.
+
+Or:    
 
     sudo update-rc.d ssh enable 
     sudo invoke-rc.d ssh start
@@ -615,6 +632,8 @@ Then the command to ssh into the RPi is simply
     sudo apt-get update
     sudo apt-get dist-upgrade -y
 
+Reboot.
+
 ## remove triggerhappy 
 
     sudo apt-get remove triggerhappy 
@@ -674,6 +693,8 @@ Note: I also saw that `ufw` seems to log to `dmesg`, not sure if that is a probl
     sudo updatedb  # so 'locate' works
     sudo apt-get autoremove -y
 
+4 mins on RPi Zero W
+
 ### exim4 & mutt
 
 It's usefult to have the local mail system set up:
@@ -726,7 +747,7 @@ It will run `/usr/sbin/logwatch --output mail`, says its daily cronjob:
 
 You should run
 
-    `/usr/sbin/logwatch --output mail`
+    /usr/sbin/logwatch --output mail
 
 and verify you get mail in your `mutt`.
 
@@ -879,21 +900,36 @@ Set username & email
     git config --global user.name "Bob Johnson"
     git config --global user.email "bobjohnson@users.noreply.github.com"
 
-Bash prompt shows git branch:
+Make bash prompt show git branch:
 
-Something like this:
+In `~/.bashrc`, replace 
 
-    # 2017-10-17: git autocomplete at command line                                               
-    # locate git-completion                                                                      
-    # https://git-scm.com/book/en/v1/Git-Basics-Tips-and-Tricks                                  
-    source /usr/local/etc/bash_completion.d/git-completion.bash
+    if [ "$color_prompt" = yes ]; then
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w \$\[\033[00m\] '
+    else
+        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+    fi
+    unset color_prompt force_color_prompt
 
-    source /usr/local/etc/bash_completion.d/git-prompt.sh
-    GIT_PS1_SHOWDIRTYSTATE=true
-    export PS1='[\u@\h \W$(__git_ps1 " (%s)")]\$ '
-    # export PS1='[\u@mbp \w$(__git_ps1)]\$ '  
+with    
 
-(Note: the files `git-completion.bash` may exist in other places like `/etc/` and may be called `git-completion` on a Raspberry Pi.)
+    # begin git-prompt
+    # https://askubuntu.com/questions/730754/how-do-i-show-the-git-branch-with-colours-in-bash-prompt
+
+    # Add git branch if its present to PS1
+
+    parse_git_branch() {
+        git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+    }
+    if [ "$color_prompt" = yes ]; then
+        PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;31m\]$(parse_git_branch)\[\033[00m\]\$ '
+    else
+        PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w$(parse_git_branch)\$ '
+    fi
+    # end git-prompt
+
+(Gotta log out & back in to take effect; sourcing `.bashrc` no work.)
+
 
 Aliases:
 
@@ -906,22 +942,23 @@ Aliases:
     git config --global alias.last 'log -1 HEAD'
     git config --global alias.lol 'log --oneline --graph --decorate --all'
 
-Colors: ??
 
 ### github ssh access 
 
 Configure your rpi so you don't have to re-enter your github password.
 
+**Important**: You probably don't want your RPi to have access to your github, in case it gets hacked. Be careful!
+
 generate ssh key:
 
-    ssh-keygen -t rsa -b 4096 -C "your_email@example.com"  # your github email
+    ssh-keygen -t rsa -b 4096 -C "justinpearson@users.noreply.github.com"  # your github email
 
 - give it a passphrase
 
 to not have to type passphrase each time:
 
     eval "$(ssh-agent -s)"
-    ssh-add ~/.ssh/id_rsa # replace id_rsa with whatever you named the key file.
+    ssh-add ~/.ssh/id_rsa   # replace id_rsa with whatever you named the key file.
 
 add to github:
 
