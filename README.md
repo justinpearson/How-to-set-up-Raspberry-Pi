@@ -30,42 +30,42 @@ initial version of raspbian  | `uname -a` |
 
 # Table of Contents
 
-1. [ ] [Hardware setup](#1-hardware-setup)
-    1. [ ] [Download Raspbian](#download-raspbian)
-    1. [ ] [burn micro-SD card ](#burn-micro-sd-card )
-        1. [ ] [Option 1: etcher](#option-1-etcher)
-        1. [ ] [Option 2: dd](#option-2-dd)
-    1. [ ] [MPEG license keys (Optional)](#mpeg-license-keys-optional)
-    1. [ ] [Key generation for `ssh`](#key-generation-for-ssh)
-    1. [ ] [Power up with keyboard, mouse, monitor](#power-up-with-keyboard-mouse-monitor)
-2. [ ] [Configure linux (AS ROOT)](#2-configure-linux-as-root)
-    1. [ ] [`raspi-config`](#raspi-config)
-    1. [ ] [Change passwords](#change-passwords)
-    1. [ ] [Require pw when sudo](#require-pw-when-sudo)
-    1. [ ] [Capslock to ctrl](#capslock-to-ctrl)
-    1. [ ] [key-repeat](#key-repeat)
-    1. [ ] [bashrc](#bashrc)
-    1. [ ] [sshd](#sshd)
-    1. [ ] [static IP address](#static-ip-address)
-    1. [ ] [root crontab](#root-crontab)
-3. [ ] [Update software (AS ROOT)](#3-update-software-as-root)
-    1. [ ] [plug in internet](#plug-in-internet)
-    1. [ ] [update](#update)
-    1. [ ] [firewall](#firewall)
-    1. [ ] [install packages](#install-packages)
-        1. [ ] [exim4 & mutt](#exim4-mutt)
-4. [ ] [Configure a user](#4-configure-a-user)
-    1. [ ] [user's bashrc](#users-bashrc)
-    1. [ ] [python](#python)
-    1. [ ] [git](#git)
-        1. [ ] [set username & email](#set-username-email)
-        1. [ ] [bash prompt shows git branch etc](#bash-prompt-shows-git-branch-etc)
-        1. [ ] [aliases](#aliases)
-        1. [ ] [colors](#colors)
-5. [ ] [For headless web-browser driving (Selenium)](#5-for-headless-web-browser-driving-selenium)
-    1. [ ] [install](#install)
-        1. [ ] [geckodriver](#geckodriver)
-    1. [ ] [Test headless (xvfb) selenium installation](#test-headless-xvfb-selenium-installation)
+1. [Hardware setup](#1-hardware-setup)
+    1. [Download Raspbian](#download-raspbian)
+    1. [burn micro-SD card ](#burn-micro-sd-card )
+        1. [Option 1: etcher](#option-1-etcher)
+        1. [Option 2: dd](#option-2-dd)
+    1. [MPEG license keys (Optional)](#mpeg-license-keys-optional)
+    1. [Key generation for `ssh`](#key-generation-for-ssh)
+    1. [Power up with keyboard, mouse, monitor](#power-up-with-keyboard-mouse-monitor)
+2. [Configure linux (AS ROOT)](#2-configure-linux-as-root)
+    1. [`raspi-config`](#raspi-config)
+    1. [Change passwords](#change-passwords)
+    1. [Require pw when sudo](#require-pw-when-sudo)
+    1. [Capslock to ctrl](#capslock-to-ctrl)
+    1. [key-repeat](#key-repeat)
+    1. [bashrc](#bashrc)
+    1. [sshd](#sshd)
+    1. [static IP address](#static-ip-address)
+    1. [root crontab](#root-crontab)
+3. [Update software (AS ROOT)](#3-update-software-as-root)
+    1. [plug in internet](#plug-in-internet)
+    1. [update](#update)
+    1. [firewall](#firewall)
+    1. [install packages](#install-packages)
+        1. [exim4 & mutt](#exim4-mutt)
+4. [Configure a user](#4-configure-a-user)
+    1. [user's bashrc](#users-bashrc)
+    1. [python](#python)
+    1. [git](#git)
+        1. [set username & email](#set-username-email)
+        1. [bash prompt shows git branch etc](#bash-prompt-shows-git-branch-etc)
+        1. [aliases](#aliases)
+        1. [colors](#colors)
+5. [For headless web-browser driving (Selenium)](#5-for-headless-web-browser-driving-selenium)
+    1. [install](#install)
+        1. [geckodriver](#geckodriver)
+    1. [Test headless (xvfb) selenium installation](#test-headless-xvfb-selenium-installation)
 
 
 
@@ -987,93 +987,7 @@ Now they're using the ssh protocol:
 
 # 5. For headless web-browser driving (Selenium)
 
-Warning: The Raspberry Pi Zero W has a ARM v6 CPU architecture (do `lscpu`). Geckodriver does not release a pre-built binary for this arch, and building it yourself requires installing the huge Firefox build chain. Also, the RPi Zero is pretty underpowered for web-browsing. So I wouldn't recommend using a RPi Zero for Selenium stuff.
-
-## install
-
-    apt-get install -y xvfb firefox-esr 
-
-    pip3 install pyvirtualdisplay bs4 selenium matplotlib
-
-Check versions:
-
-    echo "Versions:"
-    echo "py3 Selenium:"
-    python3 -c "import selenium ; print(selenium.__version__)"
-    echo "py3 Matplotlib:"
-    python3 -c "import matplotlib ; print(matplotlib.__version__)"
-    echo "firefox-esr:"
-    which firefox
-    firefox --version
-
-We install Firefox because Raspbian's default browser is Chromium and I'd prefer to have my Selenium program drive a more privacy-minded browser.
-
-FYI: Menu bar > "Web Browser" > Chromium launches, go to 3 dots > "About Chromium":
-
-    Chromium version 65.0.3325.181 (Official Build) Built on Raspbian, running on Raspbian 9.4 (32.bit)
-
-### geckodriver
-
-Geckodriver is a middleware binary that allows Selenium to drive Firefox.
-
-Note: You may need to use a different combination of Geckodriver, Firefox, and Selenium. See this thread:
-
-<https://raspberrypi.stackexchange.com/questions/75409/running-selenium-firefox-geckodriver-on-raspberry-pi-2-model-b>
-
-"""
-I got a working configuration:
-
-- bought a $35 Raspberry Pi 3 from Adafruit
-    - Ships with `Python 3.5.3`
-- `lscpu` shows it runs ARM7 cpu architecture (required by geckodriver)
-- Using OS: Raspbian based on Debian Stretch (Sep 7, 2017, linux kernel v4.9)
-- Firefox `52.5.0` (`sudo apt-get install firefox-esr`)
-- geckodriver `v0.17.0` for ARM7
-- Note: Don't use the latest geckodriver -- you need to pick the one that matches your version of Firefox. This is hard because the geckodriver release notes aren't consistent about saying which version of Firefox and Selenium they're compatible with.
-"""
-
-        cd /home/pi/Downloads
-        mkdir geckodriver
-        cd geckodriver
-        GECKODRIVER_URL=https://github.com/mozilla/geckodriver/releases/download/v0.17.0/geckodriver-v0.17.0-arm7hf.tar.gz
-        wget $GECKODRIVER_URL
-        tar xzvf $(basename $GECKODRIVER_URL)
-        sudo cp -a geckodriver /usr/local/bin/
-        geckodriver --version
-
-
-## Test headless (xvfb) selenium installation
-
-If get error 
-
-    selenium.common.exceptions.WebDriverException: Message: connection refused
-
-this may mean you haven't gotten past initial firefox 'import your bookmarks' screen.
-Must somehow start firefox to click past the "import from chromium" screen.
-(Can do `ssh -X` and `$ firefox &`)
-
-
-    cd /home/pi
-    source /home/pi/.virtualenv/python3/bin/activate
-
-Check versions:
-
-    uname -a
-    which firefox
-    firefox --version
-    which python
-    python --version
-    which geckodriver
-    geckodriver --version
-    which xvfb-run
-
-Test webdriver:
-
-    xvfb-run python -c "import time; import selenium; print('Selenium: ' + selenium.__version__); from selenium import webdriver; d = webdriver.Firefox(); d.get('http://www.google.com'); print(d.page_source); time.sleep(5); d.quit()"
-
-This should print the HTML source of google.com:
-
-    <html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head> <meta content="width=device-width,minimum-scale=1.0" name="viewport"> <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"> <title>Google</title>  <style> ...
+<https://github.com/speezepearson/digisec>
 
 # 6. Backup iPhone to Raspberry Pi when you plug it in
 
